@@ -397,4 +397,4 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ---
 
-**Desenvolvido com ❤️ usando Spring WebFlux, tecnologias reativas e inteligência artificial**
+**🐾💻 Desenvolvido usando Spring WebFlux, tecnologias reativas e inteligência artificial** 
