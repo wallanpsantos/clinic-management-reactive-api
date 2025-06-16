@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:17.5-alpine
+    container_name: clinica-postgres
+    environment:
+      POSTGRES_DB: clinica_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - clinica-network
+
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: clinica-redis
+    labels:
+      - "org.springframework.boot.service-connection=redis"
+    ports:
+      - "6379:6379"
+      - "8001:8001" # Porta para o Redis Insight (opcional)
+    networks:
+      - clinica-network
+
+  clinica-app:
+    build: .
+    container_name: clinica-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres:5432/clinica_db
+      - SPRING_R2DBC_USERNAME=postgres
+      - SPRING_R2DBC_PASSWORD=postgres
+      - SPRING_FLYWAY_URL=jdbc:postgresql://postgres:5432/clinica_db
+      - SPRING_FLYWAY_USER=postgres
+      - SPRING_FLYWAY_PASSWORD=postgres
+      # A configuração de host do Redis é feita via application.yml no perfil 'docker'
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - clinica-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  clinica-network:
+    driver: bridge
