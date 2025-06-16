@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: clinic-management-reactive-api
+server:
+  port: 8080
