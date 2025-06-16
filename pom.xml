@@ -11,7 +11,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.0</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <!-- ======================================================================= -->
@@ -19,10 +19,11 @@
     <!-- ======================================================================= -->
     <groupId>com.br</groupId>
     <artifactId>clinic-management-reactive-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>clinic-management-reactive-api</name>
-    <description>API Reativa para Gerenciamento de Clínica Médica com Spring WebFlux, R2DBC, Redis e Spring AI</description>
-    <url>https://github.com/seu-usuario/clinic-management-reactive-api</url>
+    <description>API Reativa para Gerenciamento de Clínica Médica com Spring WebFlux, R2DBC, Redis e Spring AI
+    </description>
+    <url>https://github.com/wallanpsantos/clinic-management-reactive-api</url>
 
     <licenses>
         <license>
@@ -31,17 +32,11 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <name>Seu Nome</name>
-            <email>seu.email@example.com</email>
-        </developer>
-    </developers>
-
     <scm>
-        <connection>scm:git:git://github.com/seu-usuario/clinic-management-reactive-api.git</connection>
-        <developerConnection>scm:git:ssh://github.com/seu-usuario/clinic-management-reactive-api.git</developerConnection>
-        <url>https://github.com/seu-usuario/clinic-management-reactive-api</url>
+        <connection>scm:git:git:https://github.com/wallanpsantos/clinic-management-reactive-api.git</connection>
+        <developerConnection>scm:git:ssh://https://github.com/wallanpsantos/clinic-management-reactive-api.git
+        </developerConnection>
+        <url>https://github.com/wallanpsantos/clinic-management-reactive-api</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -53,6 +48,10 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <jackson-databind.version>2.19.0</jackson-databind.version>
+        <easymock.version>5.6.0</easymock.version>
     </properties>
 
     <!-- ======================================================================= -->
@@ -163,7 +162,7 @@
         </dependency>
 
         <!-- ======================================================================= -->
-        <!-- DEPENDÊNCIAS OPCIONAIS (DEV TOOLS)                                      -->
+        <!-- DEPENDÊNCIAS (DEV TOOLS)                                                -->
         <!-- ======================================================================= -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -174,6 +173,16 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
         </dependency>
 
         <!-- ======================================================================= -->
@@ -233,6 +242,14 @@
         <dependency>
             <groupId>org.springframework.restdocs</groupId>
             <artifactId>spring-restdocs-mockmvc</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- === MOCKS PARA TESTES === -->
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <version>${easymock.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -297,32 +314,6 @@
                 </configuration>
             </plugin>
 
-            <!-- === PLUGIN DE DOCUMENTAÇÃO (ASCIIDOCTOR) === -->
-            <plugin>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>generate-docs</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                        <configuration>
-                            <backend>html</backend>
-                            <doctype>book</doctype>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.springframework.restdocs</groupId>
-                        <artifactId>spring-restdocs-asciidoctor</artifactId>
-                        <version>${spring-restdocs.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
         </plugins>
     </build>
 
