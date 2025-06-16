@@ -1,0 +1,131 @@
+# Nome do Workflow: descreve o que o pipeline faz.
+name: CI Pipeline - Build, Test, Sonar & Snyk Scan
+
+# Gatilhos (Triggers): define quando o workflow será executado.
+on:
+  push:
+    branches: [ "main", "develop" ] # Executa em pushes para main e develop
+  pull_request:
+    branches: [ "main", "develop" ] # Executa em pull requests para main e develop
+    types: [opened, synchronize, reopened] # Tipos de eventos de PR
+
+jobs:
+  # Job 1: Build e Teste da Aplicação
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest # O job será executado em uma máquina virtual Ubuntu
+
+    steps:
+      # Passo 1: Checkout do código do repositório
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para análise do SonarQube/SonarCloud
+
+      # Passo 2: Configuração do JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven' # Habilita o cache para as dependências do Maven
+
+      # Passo 3: Build e execução dos testes com Maven
+      # O comando 'verify' executa o ciclo de vida do Maven até a fase 'verify'.
+      # Isso inclui compilar, executar os testes unitários e de integração.
+      - name: Build and Test with Maven
+        run: mvn -B verify --file pom.xml
+
+  # Job 2: Análise de Qualidade com SonarCloud
+  sonar-analysis:
+    name: SonarCloud Analysis
+    needs: build-and-test # Este job depende do sucesso do job 'build-and-test'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Passo para executar a análise do SonarCloud
+      # Requer configuração de segredos no seu repositório do GitHub:
+      # SONAR_TOKEN: Token de acesso do SonarCloud
+      # SONAR_PROJECT_KEY: Chave do projeto no SonarCloud
+      - name: SonarCloud Scan
+        run: mvn -B verify sonar:sonar \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=SEU_ORGANIZATION_KEY \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token padrão do GitHub para PRs
+
+  # Job 3: Verificação de Segurança com Snyk
+  snyk-security-scan:
+    name: Snyk Security Scan
+    needs: build-and-test # Depende do sucesso do job 'build-and-test'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Passo para instalar e executar o Snyk
+      # Requer configuração de segredo no seu repositório:
+      # SNYK_TOKEN: Seu token de autenticação do Snyk
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven@master
+        continue-on-error: true # Permite que o pipeline continue mesmo se vulnerabilidades forem encontradas
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=pom.xml --all-projects --fail-on=upgradable
+
+  # Job 4: Build da Imagem Docker (Opcional)
+  # Este job só será executado se os jobs anteriores (build, sonar, snyk) forem bem-sucedidos.
+  build-docker-image:
+    name: Build Docker Image
+    needs: [build-and-test, sonar-analysis, snyk-security-scan]
+    if: github.ref == 'refs/heads/main' # Executa apenas em pushes para a branch 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login no Docker Hub (ou outro registry)
+      # Requer configuração de segredos:
+      # DOCKERHUB_USERNAME
+      # DOCKERHUB_TOKEN
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build e push da imagem Docker
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: seu-usuario/clinic-management-reactive-api:latest
+
